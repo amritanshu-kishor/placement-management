@@ -6,6 +6,7 @@ A simple placement management application. This repository contains a Python-bas
 
 - Python 3.8+ installed
 - (Optional) virtual environment tool: `venv` or `virtualenv`
+- MySQL server installed (for recommended setup)
 
 ## Setup
 
@@ -13,7 +14,7 @@ A simple placement management application. This repository contains a Python-bas
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+.\\.venv\\Scripts\\Activate.ps1
 ```
 
 2. Install dependencies:
@@ -22,16 +23,44 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-3. Initialize the database using `schema.sql` (adjust for your DB engine):
+3. Database (MySQL) — using your own username/password
 
-```powershell
-# Example for SQLite (create a DB file and apply schema)
-# sqlite3 placement.db < schema.sql
+This project can use MySQL. It's best practice to keep DB credentials outside source files and use environment variables. Create a MySQL database, a dedicated user, and grant privileges. Replace `your_root_password`, `placement_db`, `pm_user`, and `pm_password` with your own values.
+
+Create the database and user (run in a shell where `mysql` client is available):
+
+```bash
+mysql -u root -p -e "CREATE DATABASE placement_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root -p -e "CREATE USER 'pm_user'@'localhost' IDENTIFIED BY 'pm_password';"
+mysql -u root -p -e "GRANT ALL PRIVILEGES ON placement_db.* TO 'pm_user'@'localhost'; FLUSH PRIVILEGES;"
 ```
 
-4. Run the application:
+Apply the schema using the new user:
+
+```bash
+mysql -u pm_user -p placement_db < schema.sql
+```
+
+4. Configure credentials via environment variables
+
+Create a `.env` file (do not commit it) or export environment variables. Use your own DB username and password.
+
+Example environment variables (also provided in `.env.example`):
+
+```
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=placement_db
+DB_USER=pm_user
+DB_PASSWORD=pm_password
+```
+
+If the application reads env vars differently, adapt these names accordingly. Never commit real passwords to the repository.
+
+5. Run the application:
 
 ```powershell
+# In PowerShell
 python app.py
 ```
 
@@ -41,6 +70,12 @@ python app.py
 - `schema.sql`: Database schema.
 - `requirements.txt`: Python dependencies.
 - `LICENSE`: Project license.
+- `.env.example`: Example environment variables (no secrets).
+
+## Security note
+
+- Use strong passwords and limit user privileges to only what the app needs.
+- For production, consider using a secrets manager or platform-provided environment variables instead of a plain `.env` file.
 
 ## License
 
